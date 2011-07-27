@@ -15,10 +15,16 @@ class TreeifySpec extends FlatSpec with ShouldMatchers {
 
     Treeify(graph/leif) should equal (Map(
       "uri"->leif.uri, 
-      "name"->"Leif", 
-      "knows"->Map(
-        "uri"->bill.uri, 
-        "name"->"Bill"
+      "name"->Set("Leif"), 
+      "knows"->Set(
+        Map(
+          "uri"->bill.uri, 
+          "name"->Set("Bill")
+        ),
+        Map(
+          "uri"->john.uri, 
+          "name"->Set("John")
+        )
       )
     ))
   }
