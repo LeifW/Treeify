@@ -18,21 +18,9 @@ class TreeifySpec extends FlatSpec with ShouldMatchers {
       bill -name-> "Bill"
     )
 
-    Treeify(graph/leif) should equal (Map(
-      "uri"->leif.uri, 
-      "name"->"Leif", 
-      "homepage"->"http://leif.com/home",
-      "knows"->Set(
-        Map(
-          "uri"->bill.uri, 
-          "name"->"Bill"
-        ),
-        Map(
-          "uri"->john.uri, 
-          "name"->"John"
-        )
-      )
-    ))
+    Treeify(graph/leif) should equal (
+      """{"name":["Leif"],"knows":[{"name":["Bill"],"uri":"http://bill.com"},{"name":["John"],"uri":"http://john.com"}],"homepage":[{"uri":"http://leif.com/home"}],"uri":"http://leif.com"}"""
+    )
   }
 
 }
