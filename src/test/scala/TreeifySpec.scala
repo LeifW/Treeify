@@ -5,7 +5,7 @@ import org.scalatest.FlatSpec
 import org.scalatest.matchers.ShouldMatchers
 
 class TreeifySpec extends FlatSpec with ShouldMatchers {
-  "A graph" should "be represented as a tree" in {
+  "A graph" should "be represented as regular JSON" in {
     val List(leif, john, bill, name, knows, homepage) = 
       List("http://leif.com", "http://john.com", "http://bill.com", "http://schema.com/name", "http://schema.com/knows", "http://schema.com/homepage").map( UriRef(_) )
     val graph = Graph(
