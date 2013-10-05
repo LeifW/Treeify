@@ -1,5 +1,5 @@
 import org.scardf._
-
+import org.json4s.native.JsonMethods._
 
 import org.scalatest.FlatSpec
 import org.scalatest.matchers.ShouldMatchers
@@ -13,20 +13,20 @@ class TreeifySpec extends FlatSpec with ShouldMatchers {
       bill-name->"Bill"
     )
 
-    Treeify(graph/leif) should equal (Map(
-      "uri"->leif.uri, 
-      "name"->Set("Leif"), 
-      "knows"->Set(
-        Map(
-          "uri"->bill.uri, 
-          "name"->Set("Bill")
-        ),
-        Map(
-          "uri"->john.uri, 
-          "name"->Set("John")
-        )
-      )
-    ))
+    pretty(render(Treeify(graph/leif))) should equal (
+      """{
+        |  "@id":"http://leif.com",
+        |  "knows":{
+        |    "@id":"http://bill.com",
+        |    "name":"Bill"
+        |  },
+        |  "knows":{
+        |    "@id":"http://john.com",
+        |    "name":"John"
+        |  },
+        |  "name":"Leif"
+        |}""".stripMargin
+    )
   }
 
 }
