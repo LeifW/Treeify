@@ -1,10 +1,12 @@
+package treeify
+
 import org.scardf._
-import org.json4s.native.JsonMethods._
 
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.{Matchers, FlatSpec}
+import treeify.Treeify
+import org.json4s.native.{renderJValue, prettyJson}
 
-class TreeifySpec extends FlatSpec with ShouldMatchers {
+class TreeifySpec extends FlatSpec with Matchers {
   "A graph" should "be represented as a tree" in {
     val List(leif, john, bill, name, knows) = List("http://leif.com", "http://john.com", "http://bill.com", "http://schema.com/name", "http://schema.com/knows").map( UriRef(_) )
     val graph = Graph(
@@ -13,7 +15,8 @@ class TreeifySpec extends FlatSpec with ShouldMatchers {
       bill-name->"Bill"
     )
 
-    pretty(render(Treeify(graph/leif))) should equal (
+    println(prettyJson(renderJValue(Treeify(graph/leif).run._2)))
+    prettyJson(renderJValue(Treeify(graph/leif).run._2)) should equal (
       """{
         |  "@id":"http://leif.com",
         |  "knows":{

@@ -1,6 +1,9 @@
+package treeify
+
 import org.scardf.{Turtle, NTriple, UriRef, Serializator}
 //import org.scardf.jena.JenaSerializator
-import java.io.{BufferedReader, InputStreamReader, FileReader} 
+import java.io.{BufferedReader, InputStreamReader, FileReader}
+
 
 object Main {
   def main( args:Array[String] ) {
@@ -12,7 +15,7 @@ object Main {
       case Array(startNode) => 
         val stdin = new BufferedReader(new InputStreamReader(System.in))
         val graph = new Serializator(NTriple) readFrom stdin
-        println( Treeify( graph/UriRef(startNode) ) )
+        //println( Treeify( graph/UriRef(startNode) ) )
       case other => println("Usage: treeify <rdf_graph.nt> <start-node> ")
     }
   }
