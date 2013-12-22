@@ -3,14 +3,15 @@ package treeify
 import org.json4s.JsonAST._
 import org.scardf._
 //import scalaz.Writer
-//import scalaz.syntax.writer._
+import scalaz.syntax.writer._
 import scalaz._
-import Scalaz._
+//import Scalaz._
 import effectful._
-//import scalaz.syntax.applicative._
+import scalaz.syntax.applicative._
+import scalaz.syntax.traverse._
 //import scalaz.syntax.monad._
-//import scalaz.std.map._
-//import scalaz.std.list._
+import scalaz.std.map._
+import scalaz.std.list._
 import org.scardf.RdfTriple
 import org.json4s.JsonAST.JString
 import org.scardf.GraphNode
@@ -25,7 +26,10 @@ object PropertyInfo extends Enumeration {
 object Treeify {
 
   type Context[A] = Writer[Map[String, UriRef], A]
-  implicit val groupie = Semigroup.instance[UriRef]((u1, u2) => UriRef(u1.uri ++ u2.uri))
+  implicit val groupie = Semigroup.instance[UriRef]{ case (UriRef(u1), UriRef(u2)) =>
+    if (u1 != u2) sys.error(u1 + " did not equal " + u2)
+    UriRef(u1)
+  }
 
   val lastDelimiter = ".*[#/]".r
   def localName(res:UriRef): Context[String] = {
@@ -34,16 +38,16 @@ object Treeify {
   }
   //def apply(start:GraphNode): Context[JObject] = null
 
-  def apply(start:GraphNode): Context[JObject] = {
+  def apply(start:GraphNode) = {
     val graph = start.graph
 
-    def treeify(subject:SubjectNode, visited:Set[SubjectNode]): Context[JObject] = {
+    def treeify(subject:SubjectNode, visited:Set[SubjectNode]): Context[JObject] =
       //val data: List[Context[(String, _ <: JValue)]] = graph.triplesLike(subject,UriRef,Node) collect {
-      val data: Context[List[(String, JValue)]] = (graph.triplesLike(subject, UriRef, Node) collect {
+      (graph.triplesLike(subject, UriRef, Node) collect {
         case RdfTriple(_, RDF.Type, typ: UriRef) => effectfully { ("@type" -> JString(localName(typ)!)) }
         //case RdfTriple(_, pred, value:SubjectNode) if !visited.contains(value)=> localName(pred) flatMap (_ -> treeify(value, visited + subject))
         case RdfTriple(_, pred, value: SubjectNode) if !visited.contains(value) =>
-          (localName(pred) |@| treeify(value, visited + subject)).tupled
+           effectfully { localName(pred).! -> treeify(value, visited + subject).! }
         /*
           for {
             localPred <- localName(pred)
@@ -70,7 +74,15 @@ object Treeify {
         */
         case RdfTriple(_, pred, PlainLiteral(value, _)) =>
           effectfully{ (localName(pred).! -> JString(value)) }
-      }).toList.sequenceU
+      }).toList.sequenceU map {data =>
+        JObject(
+          subject match {
+            case Blank(_) => data
+            case UriRef(uri) =>
+              ("@id" -> JString(uri)) :: data
+          }
+        )
+      }
 
       /*
       JObject( subject match {
@@ -81,16 +93,8 @@ object Treeify {
           data.sequenceU //map (v => List("@id" -> JString(uri)) :: v)
       }).point[Context]
       */
-      effectfully{ JObject(
-        subject match {
-          case Blank(_) => data!
-          case UriRef(uri) =>
-            ("@id" -> JString(uri)) :: data.!
-        }
-      )}
-    }
 
-    treeify(start.node, Set(start.node))
+    treeify(start.node, Set(start.node)).run
   }
 
 }

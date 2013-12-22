@@ -3,7 +3,6 @@ package treeify
 import org.scardf._
 
 import org.scalatest.{Matchers, FlatSpec}
-import treeify.Treeify
 import org.json4s.native.{renderJValue, prettyJson}
 
 class TreeifySpec extends FlatSpec with Matchers {
@@ -15,8 +14,9 @@ class TreeifySpec extends FlatSpec with Matchers {
       bill-name->"Bill"
     )
 
-    println(prettyJson(renderJValue(Treeify(graph/leif).run._2)))
-    prettyJson(renderJValue(Treeify(graph/leif).run._2)) should equal (
+    println(Treeify(graph/leif)._1)
+    println(prettyJson(renderJValue(Treeify(graph/leif)._2)))
+    prettyJson(renderJValue(Treeify(graph/leif)._2)) should equal (
       """{
         |  "@id":"http://leif.com",
         |  "knows":{
