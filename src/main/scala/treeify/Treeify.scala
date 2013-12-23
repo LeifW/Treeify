@@ -9,13 +9,19 @@ import scalaz.std.list._
 import scalaz.std.map._
 import org.scardf._
 import org.json4s.JsonAST._
-//import org.json4s.JsonDSL.{map2jvalue, string2jvalue}
 import org.json4s.JsonDSL._
 
+/*
 object PropertyInfo extends Enumeration {
   val id = Value("@id")
   val typ = Value("@type")
+  val context = Value("@context")
 }
+*/
+
+sealed abstract class PropertyInfo(label: String)
+case class Id(i: UriRef) extends PropertyInfo("@id")
+case class Typ(t: UriRef) extends PropertyInfo("@type")
 
 object Treeify {
 
@@ -36,9 +42,10 @@ object Treeify {
 
     def treeify(subject:SubjectNode, visited:Set[SubjectNode]): Context[JObject] =
       (graph.triplesLike(subject, UriRef, Node) collect {
-        case RdfTriple(_, RDF.Type, typ: UriRef) => effectfully { ("@type" -> JString(localName(typ)!)) }
+        case RdfTriple(_, RDF.Type, typ: UriRef) =>
+          effectfully( "@type" -> JString(localName(typ)!) )
         case RdfTriple(_, pred, value: SubjectNode) if !visited.contains(value) =>
-           effectfully { localName(pred).! -> treeify(value, visited + subject).! }
+          effectfully( localName(pred).! -> treeify(value, visited + subject).! )
         case RdfTriple(_, pred, TypedLiteral(value, datatype)) => for {
           l <- localName(pred)
           d <- datatype match {
@@ -49,7 +56,7 @@ object Treeify {
           }
         } yield l -> d
         case RdfTriple(_, pred, PlainLiteral(value, _)) =>
-          effectfully{ (localName(pred).! -> JString(value)) }
+          effectfully( localName(pred).! -> JString(value) )
       }).toList.sequenceU map {data =>
         JObject(
           subject match {
@@ -60,7 +67,6 @@ object Treeify {
         )
       }
 
-    //val (context, JObject(contents)) = treeify(start.node, Set(start.node)).run
     val (context, json ) = treeify(start.node, Set(start.node)).run
     JField("@context", context.mapValues(_.uri)) ~ json
   }
