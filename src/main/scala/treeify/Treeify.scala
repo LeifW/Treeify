@@ -9,6 +9,8 @@ import scalaz.std.list._
 import scalaz.std.map._
 import org.scardf._
 import org.json4s.JsonAST._
+//import org.json4s.JsonDSL.{map2jvalue, string2jvalue}
+import org.json4s.JsonDSL._
 
 object PropertyInfo extends Enumeration {
   val id = Value("@id")
@@ -58,7 +60,9 @@ object Treeify {
         )
       }
 
-    treeify(start.node, Set(start.node)).run
+    //val (context, JObject(contents)) = treeify(start.node, Set(start.node)).run
+    val (context, json ) = treeify(start.node, Set(start.node)).run
+    JField("@context", context.mapValues(_.uri)) ~ json
   }
 
 }

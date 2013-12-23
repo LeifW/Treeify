@@ -14,9 +14,9 @@ class TreeifySpec extends FlatSpec with Matchers {
       bill-name->"Bill"
     )
 
-    println(Treeify(graph/leif)._1)
-    println(prettyJson(renderJValue(Treeify(graph/leif)._2)))
-    prettyJson(renderJValue(Treeify(graph/leif)._2)) should equal (
+    //println(Treeify(graph/leif)._1)
+    println(prettyJson(renderJValue(Treeify(graph/leif))))
+    prettyJson(renderJValue(Treeify(graph/leif))) should equal (
       """{
         |  "@id":"http://leif.com",
         |  "knows":{
