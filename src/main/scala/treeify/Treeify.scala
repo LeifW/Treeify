@@ -41,7 +41,7 @@ object Treeify {
     case (t1, t2) if t1 === t2 => t1
     case (Both(a, b), o) if o.bimap(_ === a, _ === b).foldRight(true)(_ && _) => Both(a, b)
     case (o, Both(a, b)) if o.bimap(_ === a, _ === b).foldRight(true)(_ && _) => Both(a, b)
-    case (t1, t2) => sys.error("Conflicting information in document: " + t1 + " & " + t2)
+    case (t1, t2) => sys.error("Conflicting information about document: " + t1 + " & " + t2)
   }
 
   val lastDelimiter = ".*[#/]".r
@@ -65,7 +65,7 @@ object Treeify {
             case XSD.int | XSD.integer => JInt(value.toInt).point[Context]
             case XSD.float | XSD.double => JDouble(value.toDouble).point[Context]
             case XSD.boolean => JBool(value.toBoolean).point[Context]
-            case other => JString(value).point[Context]
+            case other => JString(value) set Map(l -> That[Id, Typ]( Typ(other) ) )
           }
         } yield l -> d
         case RdfTriple(_, pred, PlainLiteral(value, _)) =>
@@ -74,14 +74,21 @@ object Treeify {
         JObject(
           subject match {
             case Blank(_) => data
-            case UriRef(uri) =>
-              ("@id" -> JString(uri)) :: data
+            case UriRef(uri) => ("@id" -> JString(uri)) :: data
           }
         )
       }
 
-    val (context, json ) = treeify(start.node, Set(start.node)).run
-    JField("@context", context.collect { case (k, This(Id(UriRef(uri)))) => JField(k,  uri)}) ~ json
+    val (context, JObject(values)) = treeify(start.node, Set(start.node)).run
+    JObject(
+      JField("@context", context mapValues {
+        case This(Id(UriRef(id))) => JString(id)
+        case Both(Id(UriRef(id)), Typ(UriRef(typ))) => JObject(
+          "@id" -> id,
+          "@type" -> typ
+        )
+      }) :: values
+    )
   }
 
 }
